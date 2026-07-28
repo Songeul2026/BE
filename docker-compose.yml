@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: songeul-postgres
+    environment:
+      POSTGRES_DB: songeul
+      POSTGRES_USER: songeul
+      POSTGRES_PASSWORD: son0502geul
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "songeul", "-d", "songeul"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
