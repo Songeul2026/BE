@@ -57,4 +57,16 @@ public class RemittanceService {
         return TransferResponse.of(saveTransfer);
 
     }
+
+    // 6) 송금 결과 조회
+    public TransferResponse getTransferResult (Long remittanceId) {
+
+        // 1. 송금 내역 없으면 -> 에러 처리
+        Transfer transfer = transferRepository.findByRemittanceId(remittanceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSFER_NOT_FOUND));
+
+        // 2. 있으면 결과 반환
+        return TransferResponse.of(transfer);
+
+    }
 }

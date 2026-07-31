@@ -31,4 +31,17 @@ public class RemittanceController {
 
     }
 
+    // 6) 송금 결과 조회
+    @Operation(summary = "송금 결과 조회", description = "완료된 송금의 결과를 조회합니다.")
+    @GetMapping("/{remittanceId}/transfer")
+    public ResponseEntity<ApiResponse<TransferResponse>> getTransferResult (@PathVariable Long remittanceId) {
+
+        TransferResponse response = remittanceService.getTransferResult(remittanceId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("S200", "송금 결과를 조회했습니다.", response));
+
+    }
+
 }
