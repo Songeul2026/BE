@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// MVP 범위에서 로그인/회원가입 미사용으로 결정되어 비활성화 (2026-07-31). 코드는 보존, Spring 빈 등록만 막음.
 @Tag(name = "Auth", description = "인증 관련 API")
-@RestController
-@RequestMapping("/api/v1/auth")
+// @RestController
+// @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
