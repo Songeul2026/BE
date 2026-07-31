@@ -69,4 +69,8 @@ public class Remittance {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    public void complete() {
+        this.status = RemittanceStatus.COMPLETED;
+    }
+
 }
