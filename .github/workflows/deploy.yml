@@ -54,4 +54,5 @@ jobs:
           script: |
             cd ~/songeul
             docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml restart nginx
             docker image prune -f
