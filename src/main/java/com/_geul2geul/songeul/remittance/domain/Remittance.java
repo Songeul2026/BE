@@ -73,4 +73,20 @@ public class Remittance {
         this.status = RemittanceStatus.COMPLETED;
     }
 
+    public void updateRecognizedFields(String recipientName, String bankName, String accountNumber, Long amount) {
+        if (recipientName != null) {
+            this.recipientName = recipientName;
+        }
+        if (bankName != null) {
+            this.bankName = bankName;
+        }
+        if (accountNumber != null) {
+            this.accountNumber = accountNumber;
+        }
+        if (amount != null) {
+            this.amount = amount;
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
 }
