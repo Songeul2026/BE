@@ -5,6 +5,8 @@ import com._geul2geul.songeul.common.exception.ErrorCode;
 import com._geul2geul.songeul.remittance.domain.Remittance;
 import com._geul2geul.songeul.remittance.domain.RemittanceStatus;
 import com._geul2geul.songeul.remittance.domain.Transfer;
+import com._geul2geul.songeul.remittance.dto.RemittanceUpdateRequest;
+import com._geul2geul.songeul.remittance.dto.RemittanceUpdateResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
 import com._geul2geul.songeul.remittance.repository.RemittanceRepository;
 import com._geul2geul.songeul.remittance.repository.TransferRepository;
@@ -21,6 +23,24 @@ public class RemittanceService {
 
     private final RemittanceRepository remittanceRepository;
     private final TransferRepository transferRepository;
+
+    // 13) 인식결과 수정
+    public RemittanceUpdateResponse updateRemittance(Long remittanceId, RemittanceUpdateRequest request) {
+        Remittance remittance = remittanceRepository.findById(remittanceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.REMITTANCE_NOT_FOUND));
+
+        if (remittance.getStatus() == RemittanceStatus.COMPLETED) {
+            throw new CustomException(ErrorCode.REMITTANCE_UPDATE_NOT_ALLOWED);
+        }
+
+        remittance.updateRecognizedFields(
+                request.getRecipientName(),
+                request.getBankName(),
+                request.getAccountNumber(),
+                request.getAmount());
+
+        return RemittanceUpdateResponse.of(remittance);
+    }
 
     // 5) 송금 확인
     public TransferResponse transfer (Long remittanceId) {

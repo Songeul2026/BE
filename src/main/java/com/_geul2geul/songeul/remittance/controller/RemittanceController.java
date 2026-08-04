@@ -1,10 +1,13 @@
 package com._geul2geul.songeul.remittance.controller;
 
 import com._geul2geul.songeul.common.response.ApiResponse;
+import com._geul2geul.songeul.remittance.dto.RemittanceUpdateRequest;
+import com._geul2geul.songeul.remittance.dto.RemittanceUpdateResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
 import com._geul2geul.songeul.remittance.service.RemittanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,21 @@ import org.springframework.web.bind.annotation.*;
 public class RemittanceController {
 
     private final RemittanceService remittanceService;
+
+    // 13) 인식결과 수정
+    @Operation(summary = "인식결과 수정", description = "사용자가 확인 화면에서 수정한 인식 결과(이름/은행/계좌/금액)를 부분 반영합니다.")
+    @PatchMapping("/{remittanceId}")
+    public ResponseEntity<ApiResponse<RemittanceUpdateResponse>> updateRemittance(
+            @PathVariable Long remittanceId,
+            @Valid @RequestBody RemittanceUpdateRequest request) {
+
+        RemittanceUpdateResponse response = remittanceService.updateRemittance(remittanceId, request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("S200", "수정 내용이 반영되었습니다", response));
+
+    }
 
     // 5) 송금 확인
     @Operation(summary = "송금 확인", description = "사용자가 확인한 송금 정보(이름, 은행, 계좌, 금액)로 송금을 실행합니다.")
