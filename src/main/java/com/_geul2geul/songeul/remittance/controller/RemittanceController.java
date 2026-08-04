@@ -35,6 +35,21 @@ public class RemittanceController {
 
     }
 
+    // 12) 이미지 재요청 (재촬영)
+    @Operation(summary = "이미지 재요청 (재촬영)", description = "OCR 인식 실패 시 새 이미지를 업로드하여 다시 인식을 요청합니다.")
+    @PostMapping(value = "/{remittanceId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<RemittanceCreateResponse>> retryOcr(
+            @PathVariable Long remittanceId,
+            @RequestParam("image") MultipartFile image) {
+
+        RemittanceCreateResponse response = remittanceService.retryOcr(remittanceId, image);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("S201", "재촬영 이미지로 다시 인식을 진행합니다", response));
+
+    }
+
     // 5) 송금 확인
     @Operation(summary = "송금 확인", description = "사용자가 확인한 송금 정보(이름, 은행, 계좌, 금액)로 송금을 실행합니다.")
     @PostMapping("/{remittanceId}/transfer")
