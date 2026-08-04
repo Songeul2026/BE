@@ -5,6 +5,7 @@ import com._geul2geul.songeul.common.exception.ErrorCode;
 import com._geul2geul.songeul.remittance.domain.Remittance;
 import com._geul2geul.songeul.remittance.domain.RemittanceStatus;
 import com._geul2geul.songeul.remittance.domain.Transfer;
+import com._geul2geul.songeul.remittance.dto.OcrResultResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
 import com._geul2geul.songeul.remittance.repository.RemittanceRepository;
 import com._geul2geul.songeul.remittance.repository.TransferRepository;
@@ -21,6 +22,14 @@ public class RemittanceService {
 
     private final RemittanceRepository remittanceRepository;
     private final TransferRepository transferRepository;
+
+    // 11) OCR 결과 조회
+    public OcrResultResponse getOcrResult(Long remittanceId) {
+        Remittance remittance = remittanceRepository.findById(remittanceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.REMITTANCE_NOT_FOUND));
+
+        return OcrResultResponse.of(remittance);
+    }
 
     // 5) 송금 확인
     public TransferResponse transfer (Long remittanceId) {

@@ -1,6 +1,7 @@
 package com._geul2geul.songeul.remittance.controller;
 
 import com._geul2geul.songeul.common.response.ApiResponse;
+import com._geul2geul.songeul.remittance.dto.OcrResultResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
 import com._geul2geul.songeul.remittance.service.RemittanceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,25 @@ import org.springframework.web.bind.annotation.*;
 public class RemittanceController {
 
     private final RemittanceService remittanceService;
+
+    // 11) OCR 결과 조회
+    @Operation(summary = "OCR 결과 조회", description = "이미지 업로드 후 OCR 인식 결과를 조회합니다.")
+    @GetMapping("/{remittanceId}/ocr-result")
+    public ResponseEntity<ApiResponse<OcrResultResponse>> getOcrResult(@PathVariable Long remittanceId) {
+
+        OcrResultResponse response = remittanceService.getOcrResult(remittanceId);
+
+        String message = switch (response.getStatus()) {
+            case OCR_PROCESSING -> "인식을 진행하고 있습니다";
+            case OCR_COMPLETED, COMPLETED -> "인식이 완료되었습니다";
+            case OCR_FAILED -> "인식에 실패했습니다. 다시 촬영해주세요";
+        };
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("S200", message, response));
+
+    }
 
     // 5) 송금 확인
     @Operation(summary = "송금 확인", description = "사용자가 확인한 송금 정보(이름, 은행, 계좌, 금액)로 송금을 실행합니다.")
