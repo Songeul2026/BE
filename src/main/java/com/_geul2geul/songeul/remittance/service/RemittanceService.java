@@ -58,6 +58,31 @@ public class RemittanceService {
         return RemittanceCreateResponse.of(savedRemittance, savedImage);
     }
 
+    // 12) 이미지 재요청 (재촬영)
+    public RemittanceCreateResponse retryOcr(Long remittanceId, MultipartFile image) {
+        Remittance remittance = remittanceRepository.findById(remittanceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.REMITTANCE_NOT_FOUND));
+
+        if (remittance.getStatus() == RemittanceStatus.COMPLETED) {
+            throw new CustomException(ErrorCode.RETRY_NOT_ALLOWED);
+        }
+
+        String storedFileName = localImageStorage.store(image);
+
+        LocalDateTime now = LocalDateTime.now();
+        remittance.retryOcr(now);
+
+        RemittanceImage remittanceImage = RemittanceImage.builder()
+                .remittance(remittance)
+                .storedFileName(storedFileName)
+                .createdAt(now)
+                .build();
+        RemittanceImage savedImage = remittanceImageRepository.save(remittanceImage);
+
+        // TODO: AI팀 OCR 앙상블 서버 연동 시 재인식 이미지 전달 호출로 교체 (현재는 목업)
+
+        return RemittanceCreateResponse.of(remittance, savedImage);
+    }
     // 11) OCR 결과 조회
     public OcrResultResponse getOcrResult(Long remittanceId) {
         Remittance remittance = remittanceRepository.findById(remittanceId)

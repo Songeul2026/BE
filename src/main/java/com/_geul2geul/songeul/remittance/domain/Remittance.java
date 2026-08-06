@@ -73,4 +73,9 @@ public class Remittance {
         this.status = RemittanceStatus.COMPLETED;
     }
 
+    public void retryOcr(LocalDateTime updatedAt) {
+        this.status = RemittanceStatus.OCR_PROCESSING;
+        this.updatedAt = updatedAt;
+    }
+
 }
