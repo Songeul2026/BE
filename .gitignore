@@ -41,3 +41,7 @@ out/
 .env.*
 application-secret.yaml
 application-secret.yml
+
+### Local runtime data ###
+uploads/
+hs_err_pid*.log

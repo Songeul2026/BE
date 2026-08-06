@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -14,6 +15,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException e) {
         ErrorCode errorCode = e.getErrorCode();
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage(), null));
+    }
+
+    // 1-1. 업로드 용량 제한 초과 (multipart max-file-size/max-request-size) - 400
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+        ErrorCode errorCode = ErrorCode.INVALID_IMAGE_FILE;
 
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
