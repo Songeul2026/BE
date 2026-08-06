@@ -2,16 +2,21 @@ package com._geul2geul.songeul.remittance.service;
 
 import com._geul2geul.songeul.common.exception.CustomException;
 import com._geul2geul.songeul.common.exception.ErrorCode;
+import com._geul2geul.songeul.common.storage.LocalImageStorage;
 import com._geul2geul.songeul.remittance.domain.Remittance;
+import com._geul2geul.songeul.remittance.domain.RemittanceImage;
 import com._geul2geul.songeul.remittance.domain.RemittanceStatus;
 import com._geul2geul.songeul.remittance.domain.Transfer;
 import com._geul2geul.songeul.remittance.dto.OcrResultResponse;
+import com._geul2geul.songeul.remittance.dto.RemittanceCreateResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
+import com._geul2geul.songeul.remittance.repository.RemittanceImageRepository;
 import com._geul2geul.songeul.remittance.repository.RemittanceRepository;
 import com._geul2geul.songeul.remittance.repository.TransferRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -20,8 +25,38 @@ import java.time.LocalDateTime;
 @Transactional
 public class RemittanceService {
 
+    // TODO: 인증(로그인) 기능 활성화 후 실제 로그인 사용자 ID로 교체
+    private static final Long TEMP_USER_ID = 1L;
+
     private final RemittanceRepository remittanceRepository;
     private final TransferRepository transferRepository;
+    private final RemittanceImageRepository remittanceImageRepository;
+    private final LocalImageStorage localImageStorage;
+
+    // 10) 이미지 업로드 (송금 건 생성)
+    public RemittanceCreateResponse createRemittance(MultipartFile image) {
+        String storedFileName = localImageStorage.store(image);
+
+        LocalDateTime now = LocalDateTime.now();
+        Remittance remittance = Remittance.builder()
+                .userId(TEMP_USER_ID)
+                .status(RemittanceStatus.OCR_PROCESSING)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+        Remittance savedRemittance = remittanceRepository.save(remittance);
+
+        RemittanceImage remittanceImage = RemittanceImage.builder()
+                .remittance(savedRemittance)
+                .storedFileName(storedFileName)
+                .createdAt(now)
+                .build();
+        RemittanceImage savedImage = remittanceImageRepository.save(remittanceImage);
+
+        // TODO: AI팀 OCR 앙상블 서버 연동 시 이미지 전달 호출로 교체 (현재는 목업 - 실제 인식 없이 OCR_PROCESSING만 반환)
+
+        return RemittanceCreateResponse.of(savedRemittance, savedImage);
+    }
 
     // 11) OCR 결과 조회
     public OcrResultResponse getOcrResult(Long remittanceId) {
