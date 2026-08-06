@@ -1,6 +1,7 @@
 package com._geul2geul.songeul.remittance.controller;
 
 import com._geul2geul.songeul.common.response.ApiResponse;
+import com._geul2geul.songeul.remittance.dto.OcrResultResponse;
 import com._geul2geul.songeul.remittance.dto.RemittanceCreateResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
 import com._geul2geul.songeul.remittance.service.RemittanceService;
@@ -21,6 +22,22 @@ public class RemittanceController {
 
     private final RemittanceService remittanceService;
 
+    // 11) OCR 결과 조회
+    @Operation(summary = "OCR 결과 조회", description = "이미지 업로드 후 OCR 인식 결과를 조회합니다.")
+    @GetMapping("/{remittanceId}/ocr-result")
+    public ResponseEntity<ApiResponse<OcrResultResponse>> getOcrResult(@PathVariable Long remittanceId) {
+
+        OcrResultResponse response = remittanceService.getOcrResult(remittanceId);
+
+        String message = switch (response.getStatus()) {
+            case OCR_PROCESSING -> "인식을 진행하고 있습니다";
+            case OCR_COMPLETED, COMPLETED -> "인식이 완료되었습니다";
+            case OCR_FAILED -> "인식에 실패했습니다. 다시 촬영해주세요";
+        };
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("S200", message, response));
     // 10) 이미지 업로드 (송금 건 생성)
     @Operation(summary = "이미지 업로드 (송금 건 생성)", description = "메모지 이미지를 업로드하고 송금 건을 생성합니다. 업로드된 이미지는 OCR 인식을 위해 전달됩니다.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

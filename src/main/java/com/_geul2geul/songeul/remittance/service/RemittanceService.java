@@ -7,6 +7,7 @@ import com._geul2geul.songeul.remittance.domain.Remittance;
 import com._geul2geul.songeul.remittance.domain.RemittanceImage;
 import com._geul2geul.songeul.remittance.domain.RemittanceStatus;
 import com._geul2geul.songeul.remittance.domain.Transfer;
+import com._geul2geul.songeul.remittance.dto.OcrResultResponse;
 import com._geul2geul.songeul.remittance.dto.RemittanceCreateResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
 import com._geul2geul.songeul.remittance.repository.RemittanceImageRepository;
@@ -81,6 +82,13 @@ public class RemittanceService {
         // TODO: AI팀 OCR 앙상블 서버 연동 시 재인식 이미지 전달 호출로 교체 (현재는 목업)
 
         return RemittanceCreateResponse.of(remittance, savedImage);
+    }
+    // 11) OCR 결과 조회
+    public OcrResultResponse getOcrResult(Long remittanceId) {
+        Remittance remittance = remittanceRepository.findById(remittanceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.REMITTANCE_NOT_FOUND));
+
+        return OcrResultResponse.of(remittance);
     }
 
     // 5) 송금 확인
