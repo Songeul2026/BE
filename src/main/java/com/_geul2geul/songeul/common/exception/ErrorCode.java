@@ -13,7 +13,9 @@ public enum ErrorCode {
     REMITTANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "E404", "송금 정보를 찾을 수 없습니다."),
     ALREADY_TRANSFERRED(HttpStatus.CONFLICT, "E409", "이미 송금이 완료된 건입니다."),
     TRANSFER_NOT_FOUND(HttpStatus.NOT_FOUND, "E404", "송금 내역이 없습니다."),
-    REMITTANCE_UPDATE_NOT_ALLOWED(HttpStatus.CONFLICT, "E409", "이미 송금이 완료된 건은 수정할 수 없습니다");
+    REMITTANCE_UPDATE_NOT_ALLOWED(HttpStatus.CONFLICT, "E409", "이미 송금이 완료된 건은 수정할 수 없습니다"),
+    INVALID_IMAGE_FILE(HttpStatus.BAD_REQUEST, "E400", "이미지 파일(jpg/png, 10MB 이하)만 업로드할 수 있습니다"),
+    RETRY_NOT_ALLOWED(HttpStatus.CONFLICT, "E409", "이미 송금이 완료된 건은 다시 인식할 수 없습니다");
 
     private final HttpStatus httpStatus;
     private final String code;

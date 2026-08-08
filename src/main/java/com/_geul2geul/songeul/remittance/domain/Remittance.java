@@ -89,4 +89,9 @@ public class Remittance {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void retryOcr(LocalDateTime updatedAt) {
+        this.status = RemittanceStatus.OCR_PROCESSING;
+        this.updatedAt = updatedAt;
+    }
+
 }

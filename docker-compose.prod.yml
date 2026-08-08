@@ -27,6 +27,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+    volumes:
+      - uploads-data:/app/uploads
     restart: unless-stopped
 
   nginx:
@@ -58,3 +60,4 @@ volumes:
   postgres-data:
   certbot-conf:
   certbot-www:
+  uploads-data:
