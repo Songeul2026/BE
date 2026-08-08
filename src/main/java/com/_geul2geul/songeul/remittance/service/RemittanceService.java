@@ -9,6 +9,8 @@ import com._geul2geul.songeul.remittance.domain.RemittanceStatus;
 import com._geul2geul.songeul.remittance.domain.Transfer;
 import com._geul2geul.songeul.remittance.dto.OcrResultResponse;
 import com._geul2geul.songeul.remittance.dto.RemittanceCreateResponse;
+import com._geul2geul.songeul.remittance.dto.RemittanceUpdateRequest;
+import com._geul2geul.songeul.remittance.dto.RemittanceUpdateResponse;
 import com._geul2geul.songeul.remittance.dto.TransferResponse;
 import com._geul2geul.songeul.remittance.repository.RemittanceImageRepository;
 import com._geul2geul.songeul.remittance.repository.RemittanceRepository;
@@ -58,6 +60,14 @@ public class RemittanceService {
         return RemittanceCreateResponse.of(savedRemittance, savedImage);
     }
 
+    // 11) OCR 결과 조회
+    public OcrResultResponse getOcrResult(Long remittanceId) {
+        Remittance remittance = remittanceRepository.findById(remittanceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.REMITTANCE_NOT_FOUND));
+
+        return OcrResultResponse.of(remittance);
+    }
+
     // 12) 이미지 재요청 (재촬영)
     public RemittanceCreateResponse retryOcr(Long remittanceId, MultipartFile image) {
         Remittance remittance = remittanceRepository.findById(remittanceId)
@@ -83,12 +93,23 @@ public class RemittanceService {
 
         return RemittanceCreateResponse.of(remittance, savedImage);
     }
-    // 11) OCR 결과 조회
-    public OcrResultResponse getOcrResult(Long remittanceId) {
+
+    // 13) 인식결과 수정
+    public RemittanceUpdateResponse updateRemittance(Long remittanceId, RemittanceUpdateRequest request) {
         Remittance remittance = remittanceRepository.findById(remittanceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REMITTANCE_NOT_FOUND));
 
-        return OcrResultResponse.of(remittance);
+        if (remittance.getStatus() == RemittanceStatus.COMPLETED) {
+            throw new CustomException(ErrorCode.REMITTANCE_UPDATE_NOT_ALLOWED);
+        }
+
+        remittance.updateRecognizedFields(
+                request.getRecipientName(),
+                request.getBankName(),
+                request.getAccountNumber(),
+                request.getAmount());
+
+        return RemittanceUpdateResponse.of(remittance);
     }
 
     // 5) 송금 확인
