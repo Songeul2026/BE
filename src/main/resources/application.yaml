@@ -33,4 +33,4 @@ app:
   ocr:
     base-url: ${OCR_BASE_URL:http://localhost:8000}
     connect-timeout-ms: ${OCR_CONNECT_TIMEOUT_MS:5000}
-    read-timeout-ms: ${OCR_READ_TIMEOUT_MS:20000}
+    read-timeout-ms: ${OCR_READ_TIMEOUT_MS:45000}

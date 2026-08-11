@@ -21,12 +21,14 @@ import com._geul2geul.songeul.remittance.repository.RemittanceRepository;
 import com._geul2geul.songeul.remittance.repository.TransferRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -181,6 +183,7 @@ public class RemittanceService {
                     asLong(ocrResponse.getAmount().getValue()), toMeta(ocrResponse.getAmount()),
                     LocalDateTime.now());
         } catch (RestClientException e) {
+            log.warn("OCR 요청 실패: remittanceId={}", remittance.getId(), e);
             remittance.failOcr(LocalDateTime.now());
         }
     }
