@@ -94,4 +94,26 @@ public class Remittance {
         this.updatedAt = updatedAt;
     }
 
+    public void applyOcrResult(String recipientName, OcrFieldMeta nameMeta,
+                                String bankName, OcrFieldMeta bankMeta,
+                                String accountNumber, OcrFieldMeta accountMeta,
+                                Long amount, OcrFieldMeta amountMeta,
+                                LocalDateTime updatedAt) {
+        this.recipientName = recipientName;
+        this.bankName = bankName;
+        this.accountNumber = accountNumber;
+        this.amount = amount;
+        this.nameMeta = nameMeta;
+        this.bankMeta = bankMeta;
+        this.accountMeta = accountMeta;
+        this.amountMeta = amountMeta;
+        this.status = RemittanceStatus.OCR_COMPLETED;
+        this.updatedAt = updatedAt;
+    }
+
+    public void failOcr(LocalDateTime updatedAt) {
+        this.status = RemittanceStatus.OCR_FAILED;
+        this.updatedAt = updatedAt;
+    }
+
 }

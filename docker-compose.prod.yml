@@ -30,8 +30,12 @@ services:
       STORAGE_TYPE: ${STORAGE_TYPE:-s3}
       STORAGE_BUCKET: ${STORAGE_BUCKET:?STORAGE_BUCKET must be set}
       STORAGE_REGION: ${STORAGE_REGION:-ap-southeast-2}
+      OCR_BASE_URL: ${OCR_BASE_URL:-http://sonkeul_ai:8000}
     volumes:
       - uploads-data:/app/uploads
+    networks:
+      - default
+      - ocr-shared
     restart: unless-stopped
 
   nginx:
@@ -64,3 +68,7 @@ volumes:
   certbot-conf:
   certbot-www:
   uploads-data:
+
+networks:
+  ocr-shared:
+    external: true

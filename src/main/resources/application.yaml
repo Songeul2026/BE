@@ -20,8 +20,8 @@ spring:
         format_sql: true
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 15MB
+      max-request-size: 15MB
 
 app:
   upload:
@@ -30,3 +30,7 @@ app:
     type: ${STORAGE_TYPE:local}
     bucket: ${STORAGE_BUCKET:}
     region: ${STORAGE_REGION:ap-southeast-2}
+  ocr:
+    base-url: ${OCR_BASE_URL:http://localhost:8000}
+    connect-timeout-ms: ${OCR_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${OCR_READ_TIMEOUT_MS:20000}

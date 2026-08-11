@@ -40,10 +40,10 @@ class LocalImageStorageTest {
     }
 
     @Test
-    void 파일_용량이_10MB를_초과하면_예외가_발생한다() {
+    void 파일_용량이_15MB를_초과하면_예외가_발생한다() {
         LocalImageStorage storage = newStorage();
         MockMultipartFile image = new MockMultipartFile(
-                "image", "memo.jpg", "image/jpeg", new byte[10 * 1024 * 1024 + 1]);
+                "image", "memo.jpg", "image/jpeg", new byte[15 * 1024 * 1024 + 1]);
 
         assertThrows(CustomException.class, () -> storage.store(image));
     }

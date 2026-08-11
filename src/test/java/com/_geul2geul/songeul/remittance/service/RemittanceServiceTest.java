@@ -2,6 +2,9 @@ package com._geul2geul.songeul.remittance.service;
 
 import com._geul2geul.songeul.common.exception.CustomException;
 import com._geul2geul.songeul.common.storage.ImageStorage;
+import com._geul2geul.songeul.remittance.client.OcrClient;
+import com._geul2geul.songeul.remittance.client.OcrFieldResult;
+import com._geul2geul.songeul.remittance.client.OcrResponse;
 import com._geul2geul.songeul.remittance.domain.OcrFieldMeta;
 import com._geul2geul.songeul.remittance.domain.Remittance;
 import com._geul2geul.songeul.remittance.domain.RemittanceImage;
@@ -20,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -43,6 +47,8 @@ class RemittanceServiceTest {
     private RemittanceImageRepository remittanceImageRepository;
     @Mock
     private ImageStorage imageStorage;
+    @Mock
+    private OcrClient ocrClient;
 
     @InjectMocks
     private RemittanceService remittanceService;
@@ -54,9 +60,16 @@ class RemittanceServiceTest {
         image = new MockMultipartFile("image", "memo.jpg", "image/jpeg", "image-content".getBytes());
     }
 
-    @Test
-    void 이미지_업로드시_송금_건이_OCR_PROCESSING_상태로_생성된다() {
-        when(imageStorage.store(image)).thenReturn("stored-uuid.jpg");
+    private OcrResponse ocrSuccessResponse() {
+        return OcrResponse.builder()
+                .name(OcrFieldResult.builder().value("정대호").confidence(0.99).needsConfirmation(false).build())
+                .bank(OcrFieldResult.builder().value("하나").confidence(0.99).needsConfirmation(false).build())
+                .account(OcrFieldResult.builder().value("45678901234").confidence(0.99).needsConfirmation(true).build())
+                .amount(OcrFieldResult.builder().value(500000).confidence(0.99).needsConfirmation(false).build())
+                .build();
+    }
+
+    private void stubRemittanceAndImageSave() {
         when(remittanceRepository.save(any(Remittance.class)))
                 .thenAnswer(invocation -> {
                     Remittance remittance = invocation.getArgument(0);
@@ -78,12 +91,32 @@ class RemittanceServiceTest {
                             .createdAt(remittanceImage.getCreatedAt())
                             .build();
                 });
+    }
+
+    @Test
+    void 이미지_업로드시_OCR이_성공하면_OCR_COMPLETED_상태로_필드가_채워진다() {
+        when(imageStorage.store(image)).thenReturn("stored-uuid.jpg");
+        when(ocrClient.requestOcr(image)).thenReturn(ocrSuccessResponse());
+        stubRemittanceAndImageSave();
 
         RemittanceCreateResponse response = remittanceService.createRemittance(image);
 
         assertThat(response.getRemittanceId()).isEqualTo(1L);
         assertThat(response.getImageId()).isEqualTo(10L);
-        assertThat(response.getStatus()).isEqualTo(RemittanceStatus.OCR_PROCESSING);
+        assertThat(response.getStatus()).isEqualTo(RemittanceStatus.OCR_COMPLETED);
+    }
+
+    @Test
+    void 이미지_업로드시_OCR_호출이_실패하면_OCR_FAILED_상태가_된다() {
+        when(imageStorage.store(image)).thenReturn("stored-uuid.jpg");
+        when(ocrClient.requestOcr(image)).thenThrow(new ResourceAccessException("연결 실패"));
+        stubRemittanceAndImageSave();
+
+        RemittanceCreateResponse response = remittanceService.createRemittance(image);
+
+        assertThat(response.getRemittanceId()).isEqualTo(1L);
+        assertThat(response.getImageId()).isEqualTo(10L);
+        assertThat(response.getStatus()).isEqualTo(RemittanceStatus.OCR_FAILED);
     }
 
     @Test
@@ -162,7 +195,7 @@ class RemittanceServiceTest {
     }
 
     @Test
-    void 재촬영_요청시_상태가_OCR_PROCESSING으로_변경되고_새_이미지가_저장된다() {
+    void 재촬영_요청시_OCR이_성공하면_OCR_COMPLETED_상태로_변경되고_새_이미지가_저장된다() {
         Remittance remittance = Remittance.builder()
                 .id(1L)
                 .status(RemittanceStatus.OCR_FAILED)
@@ -171,6 +204,7 @@ class RemittanceServiceTest {
                 .build();
         when(remittanceRepository.findById(1L)).thenReturn(Optional.of(remittance));
         when(imageStorage.store(image)).thenReturn("retake-uuid.jpg");
+        when(ocrClient.requestOcr(image)).thenReturn(ocrSuccessResponse());
         when(remittanceImageRepository.save(any(RemittanceImage.class)))
                 .thenAnswer(invocation -> {
                     RemittanceImage remittanceImage = invocation.getArgument(0);
@@ -186,7 +220,7 @@ class RemittanceServiceTest {
 
         assertThat(response.getRemittanceId()).isEqualTo(1L);
         assertThat(response.getImageId()).isEqualTo(20L);
-        assertThat(response.getStatus()).isEqualTo(RemittanceStatus.OCR_PROCESSING);
+        assertThat(response.getStatus()).isEqualTo(RemittanceStatus.OCR_COMPLETED);
     }
 
     @Test

@@ -12,8 +12,8 @@ import java.util.Locale;
 @Component
 public class ImageFileValidator {
 
-    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;
-    private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "heic");
+    private static final long MAX_FILE_SIZE = 15L * 1024 * 1024;
+    private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "heic", "heif");
 
     public String validateAndExtractExtension(MultipartFile image) {
         if (image == null || image.isEmpty()) {

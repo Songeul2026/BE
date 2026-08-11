@@ -3,6 +3,10 @@ package com._geul2geul.songeul.remittance.service;
 import com._geul2geul.songeul.common.exception.CustomException;
 import com._geul2geul.songeul.common.exception.ErrorCode;
 import com._geul2geul.songeul.common.storage.ImageStorage;
+import com._geul2geul.songeul.remittance.client.OcrClient;
+import com._geul2geul.songeul.remittance.client.OcrFieldResult;
+import com._geul2geul.songeul.remittance.client.OcrResponse;
+import com._geul2geul.songeul.remittance.domain.OcrFieldMeta;
 import com._geul2geul.songeul.remittance.domain.Remittance;
 import com._geul2geul.songeul.remittance.domain.RemittanceImage;
 import com._geul2geul.songeul.remittance.domain.RemittanceStatus;
@@ -18,6 +22,7 @@ import com._geul2geul.songeul.remittance.repository.TransferRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -34,6 +39,7 @@ public class RemittanceService {
     private final TransferRepository transferRepository;
     private final RemittanceImageRepository remittanceImageRepository;
     private final ImageStorage imageStorage;
+    private final OcrClient ocrClient;
 
     // 10) 이미지 업로드 (송금 건 생성)
     public RemittanceCreateResponse createRemittance(MultipartFile image) {
@@ -55,7 +61,7 @@ public class RemittanceService {
                 .build();
         RemittanceImage savedImage = remittanceImageRepository.save(remittanceImage);
 
-        // TODO: AI팀 OCR 앙상블 서버 연동 시 이미지 전달 호출로 교체 (현재는 목업 - 실제 인식 없이 OCR_PROCESSING만 반환)
+        requestOcr(savedRemittance, image);
 
         return RemittanceCreateResponse.of(savedRemittance, savedImage);
     }
@@ -89,7 +95,7 @@ public class RemittanceService {
                 .build();
         RemittanceImage savedImage = remittanceImageRepository.save(remittanceImage);
 
-        // TODO: AI팀 OCR 앙상블 서버 연동 시 재인식 이미지 전달 호출로 교체 (현재는 목업)
+        requestOcr(remittance, image);
 
         return RemittanceCreateResponse.of(remittance, savedImage);
     }
@@ -158,5 +164,44 @@ public class RemittanceService {
         // 2. 있으면 결과 반환
         return TransferResponse.of(transfer);
 
+    }
+
+    private void requestOcr(Remittance remittance, MultipartFile image) {
+        try {
+            OcrResponse ocrResponse = ocrClient.requestOcr(image);
+            if (!isComplete(ocrResponse)) {
+                remittance.failOcr(LocalDateTime.now());
+                return;
+            }
+
+            remittance.applyOcrResult(
+                    asString(ocrResponse.getName().getValue()), toMeta(ocrResponse.getName()),
+                    asString(ocrResponse.getBank().getValue()), toMeta(ocrResponse.getBank()),
+                    asString(ocrResponse.getAccount().getValue()), toMeta(ocrResponse.getAccount()),
+                    asLong(ocrResponse.getAmount().getValue()), toMeta(ocrResponse.getAmount()),
+                    LocalDateTime.now());
+        } catch (RestClientException e) {
+            remittance.failOcr(LocalDateTime.now());
+        }
+    }
+
+    private boolean isComplete(OcrResponse response) {
+        return response != null
+                && response.getName() != null
+                && response.getBank() != null
+                && response.getAccount() != null
+                && response.getAmount() != null;
+    }
+
+    private OcrFieldMeta toMeta(OcrFieldResult field) {
+        return new OcrFieldMeta(field.getConfidence(), field.isNeedsConfirmation());
+    }
+
+    private String asString(Object value) {
+        return value != null ? value.toString() : null;
+    }
+
+    private Long asLong(Object value) {
+        return value != null ? ((Number) value).longValue() : null;
     }
 }
