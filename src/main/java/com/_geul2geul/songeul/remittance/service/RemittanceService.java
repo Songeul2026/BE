@@ -2,7 +2,7 @@ package com._geul2geul.songeul.remittance.service;
 
 import com._geul2geul.songeul.common.exception.CustomException;
 import com._geul2geul.songeul.common.exception.ErrorCode;
-import com._geul2geul.songeul.common.storage.LocalImageStorage;
+import com._geul2geul.songeul.common.storage.ImageStorage;
 import com._geul2geul.songeul.remittance.domain.Remittance;
 import com._geul2geul.songeul.remittance.domain.RemittanceImage;
 import com._geul2geul.songeul.remittance.domain.RemittanceStatus;
@@ -33,11 +33,11 @@ public class RemittanceService {
     private final RemittanceRepository remittanceRepository;
     private final TransferRepository transferRepository;
     private final RemittanceImageRepository remittanceImageRepository;
-    private final LocalImageStorage localImageStorage;
+    private final ImageStorage imageStorage;
 
     // 10) 이미지 업로드 (송금 건 생성)
     public RemittanceCreateResponse createRemittance(MultipartFile image) {
-        String storedFileName = localImageStorage.store(image);
+        String storedFileName = imageStorage.store(image);
 
         LocalDateTime now = LocalDateTime.now();
         Remittance remittance = Remittance.builder()
@@ -77,7 +77,7 @@ public class RemittanceService {
             throw new CustomException(ErrorCode.RETRY_NOT_ALLOWED);
         }
 
-        String storedFileName = localImageStorage.store(image);
+        String storedFileName = imageStorage.store(image);
 
         LocalDateTime now = LocalDateTime.now();
         remittance.retryOcr(now);

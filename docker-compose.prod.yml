@@ -27,6 +27,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      STORAGE_TYPE: ${STORAGE_TYPE:-s3}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:?STORAGE_BUCKET must be set}
+      STORAGE_REGION: ${STORAGE_REGION:-ap-southeast-2}
     volumes:
       - uploads-data:/app/uploads
     restart: unless-stopped

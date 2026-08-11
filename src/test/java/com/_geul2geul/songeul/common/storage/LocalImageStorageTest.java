@@ -17,7 +17,7 @@ class LocalImageStorageTest {
     Path tempDir;
 
     private LocalImageStorage newStorage() {
-        return new LocalImageStorage(tempDir.toString());
+        return new LocalImageStorage(tempDir.toString(), new ImageFileValidator());
     }
 
     @Test

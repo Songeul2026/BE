@@ -1,7 +1,7 @@
 package com._geul2geul.songeul.remittance.service;
 
 import com._geul2geul.songeul.common.exception.CustomException;
-import com._geul2geul.songeul.common.storage.LocalImageStorage;
+import com._geul2geul.songeul.common.storage.ImageStorage;
 import com._geul2geul.songeul.remittance.domain.OcrFieldMeta;
 import com._geul2geul.songeul.remittance.domain.Remittance;
 import com._geul2geul.songeul.remittance.domain.RemittanceImage;
@@ -42,7 +42,7 @@ class RemittanceServiceTest {
     @Mock
     private RemittanceImageRepository remittanceImageRepository;
     @Mock
-    private LocalImageStorage localImageStorage;
+    private ImageStorage imageStorage;
 
     @InjectMocks
     private RemittanceService remittanceService;
@@ -56,7 +56,7 @@ class RemittanceServiceTest {
 
     @Test
     void 이미지_업로드시_송금_건이_OCR_PROCESSING_상태로_생성된다() {
-        when(localImageStorage.store(image)).thenReturn("stored-uuid.jpg");
+        when(imageStorage.store(image)).thenReturn("stored-uuid.jpg");
         when(remittanceRepository.save(any(Remittance.class)))
                 .thenAnswer(invocation -> {
                     Remittance remittance = invocation.getArgument(0);
@@ -88,7 +88,7 @@ class RemittanceServiceTest {
 
     @Test
     void 이미지_검증에_실패하면_송금_건을_생성하지_않는다() {
-        when(localImageStorage.store(image)).thenThrow(new CustomException(
+        when(imageStorage.store(image)).thenThrow(new CustomException(
                 com._geul2geul.songeul.common.exception.ErrorCode.INVALID_IMAGE_FILE));
 
         assertThrows(CustomException.class, () -> remittanceService.createRemittance(image));
@@ -170,7 +170,7 @@ class RemittanceServiceTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
         when(remittanceRepository.findById(1L)).thenReturn(Optional.of(remittance));
-        when(localImageStorage.store(image)).thenReturn("retake-uuid.jpg");
+        when(imageStorage.store(image)).thenReturn("retake-uuid.jpg");
         when(remittanceImageRepository.save(any(RemittanceImage.class)))
                 .thenAnswer(invocation -> {
                     RemittanceImage remittanceImage = invocation.getArgument(0);
@@ -201,7 +201,7 @@ class RemittanceServiceTest {
 
         assertThrows(CustomException.class, () -> remittanceService.retryOcr(1L, image));
 
-        verify(localImageStorage, never()).store(any());
+        verify(imageStorage, never()).store(any());
     }
 
     @Test

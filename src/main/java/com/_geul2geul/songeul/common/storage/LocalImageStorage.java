@@ -1,10 +1,8 @@
 package com._geul2geul.songeul.common.storage;
 
-import com._geul2geul.songeul.common.exception.CustomException;
-import com._geul2geul.songeul.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -13,19 +11,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 @Component
-public class LocalImageStorage {
-
-    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;
-    private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "heic");
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "local", matchIfMissing = true)
+public class LocalImageStorage implements ImageStorage {
 
     private final Path storageRoot;
+    private final ImageFileValidator validator;
 
-    public LocalImageStorage(@Value("${app.upload.dir}") String uploadDir) {
+    public LocalImageStorage(@Value("${app.upload.dir}") String uploadDir, ImageFileValidator validator) {
+        this.validator = validator;
         this.storageRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(storageRoot);
@@ -34,10 +30,10 @@ public class LocalImageStorage {
         }
     }
 
+    @Override
     public String store(MultipartFile image) {
-        validate(image);
-
-        String storedFileName = UUID.randomUUID() + "." + extractExtension(image.getOriginalFilename());
+        String extension = validator.validateAndExtractExtension(image);
+        String storedFileName = UUID.randomUUID() + "." + extension;
 
         try {
             Files.copy(image.getInputStream(), storageRoot.resolve(storedFileName), StandardCopyOption.REPLACE_EXISTING);
@@ -46,25 +42,6 @@ public class LocalImageStorage {
         }
 
         return storedFileName;
-    }
-
-    private void validate(MultipartFile image) {
-        if (image == null || image.isEmpty()) {
-            throw new CustomException(ErrorCode.INVALID_IMAGE_FILE);
-        }
-        if (image.getSize() > MAX_FILE_SIZE) {
-            throw new CustomException(ErrorCode.INVALID_IMAGE_FILE);
-        }
-        if (!ALLOWED_EXTENSIONS.contains(extractExtension(image.getOriginalFilename()))) {
-            throw new CustomException(ErrorCode.INVALID_IMAGE_FILE);
-        }
-    }
-
-    private String extractExtension(String filename) {
-        if (!StringUtils.hasText(filename) || !filename.contains(".")) {
-            throw new CustomException(ErrorCode.INVALID_IMAGE_FILE);
-        }
-        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
     }
 
 }
